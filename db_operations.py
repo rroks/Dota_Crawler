@@ -4,10 +4,14 @@ import mysql.connector
 def insert_match(connection, match_details):
     columns = get_match_columns(connection)
     column_str = ','.join(columns)
-    # placeholder = ','.join('%s' * len(columns))
+    # placeholder = ','.join(('%s',) * len(columns))
     values = list()
     for key in columns:
-        values.append(match_details[key])
+        if type(match_details[key]) == unicode:
+            values.append(match_details[key].encode('utf-8'))
+        else:
+            values.append(match_details[key])
+    print(columns)
     value_str = ','.join(str(match_details[key]) for key in columns)
 
     # sql = 'INSERT INTO match_details ({}) VALUES ({})'.format(column_str, placeholder)
@@ -49,6 +53,6 @@ def get_match_columns(connection):
     result = cursor.fetchall()
     match_columns = list()
     for i in result:
-        match_columns.append(i[0])
+        match_columns.append(i[0].encode('utf-8'))
     cursor.close()
     return match_columns

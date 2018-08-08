@@ -29,24 +29,27 @@ def getting_match(args):
 
 
 def store_match(match):
-    print "store_match"
+    print(match)
     if match is not None and 0 != len(match):
         db_connection = DATABASE_POOL.connection()
         try:
             insert_match(db_connection, match)
+            return True
         except mysql.connector.IntegrityError as e:
             print(e.msg)
         finally:
             db_connection.close()
+        return False
+    else:
+        return False
 
 
-def update_previous_matches():
+def update_previous_matches(number_of_matches=10000):
     pool = Pool(4)
     connection = DATABASE_POOL.connection()
     earliest_local_match_id = get_earliest_match_id(connection)
     connection.close()
 
-    number_of_matches = 10000
     match_list = ([(DOTA_API, earliest_local_match_id - i) for i in range(number_of_matches)])
     for match in pool.map(getting_match, match_list):
         if match is not None:
@@ -60,23 +63,28 @@ def update_recent_matches(terminating_match_id):
     latest_local_match_id = get_latest_match_id(connection)
     connection.close()
 
-    if latest_local_match_id is None:
-        latest_local_match_id = terminating_match_id
-
-    number_of_matches = 10000
-    if terminating_match_id - latest_local_match_id > number_of_matches:
-        upper_bound = latest_local_match_id + number_of_matches
+    if latest_local_match_id is not None:
+        number_of_matches = 10000
+        if terminating_match_id - latest_local_match_id > number_of_matches:
+            upper_bound = latest_local_match_id + number_of_matches
+        else:
+            upper_bound = terminating_match_id + 1
+        match_list = ([(DOTA_API, i + 1,) for i in range(latest_local_match_id, upper_bound)])
+        for match in pool.map(getting_match, match_list):
+            if match is not None:
+                store_match(match)
+        pool.terminate()
     else:
-        upper_bound = terminating_match_id + 1
-    match_list = ([(DOTA_API, i + 1,) for i in range(latest_local_match_id, upper_bound)])
-    for match in pool.map(getting_match, match_list):
-        if match is not None:
-            store_match(match)
-    pool.terminate()
+        flag = False
+        while not flag:
+            match = getting_match([DOTA_API, terminating_match_id])
+            flag = store_match(match)
+            terminating_match_id -= 1
 
 
 if __name__ == '__main__':
     start = time.time()
     latest_match_id = get_latest_match(DOTA_API)
+    # latest_match_id = 4048727696
     update_recent_matches(latest_match_id)
     print(time.time() - start)

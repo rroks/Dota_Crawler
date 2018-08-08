@@ -54,7 +54,7 @@ def parse_raw_match(raw_match):
     parsed_match_details = dict()
     for key in raw_match:
         if key != 'players':
-            parsed_match_details[key] = raw_match[key]
+            parsed_match_details[key.encode('utf-8')] = raw_match[key]
         else:
             for idx, v in enumerate(raw_match[key]):
                 parsed_match_details['player%d' % idx] = v['hero_id']
