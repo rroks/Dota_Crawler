@@ -84,6 +84,7 @@ def update_recent_matches(terminating_match_id):
 
 if __name__ == '__main__':
     start = time.time()
+    update_previous_matches()
     latest_match_id = get_latest_match(DOTA_API)
     # latest_match_id = 4048727696
     update_recent_matches(latest_match_id)
