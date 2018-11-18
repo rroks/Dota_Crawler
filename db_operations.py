@@ -2,6 +2,12 @@ import mysql.connector
 
 
 def insert_match(connection, match_details):
+    """
+    Persist match info.
+    :param connection: Database connection object.
+    :param match_details: A dict() of match info.
+    :return: SQL execution result.
+    """
     columns = get_match_columns(connection)
     column_str = ','.join(columns)
     # placeholder = ','.join(('%s',) * len(columns))
@@ -24,11 +30,18 @@ def insert_match(connection, match_details):
     except mysql.connector.IntegrityError as e:
         # print (e.msg)
         raise e
+    except Exception as e:
+        raise e
     finally:
         cursor.close()
 
 
 def get_latest_match_id(connection):
+    """
+    Query id number of the latest played match id in database.
+    :param connection: Database latest object.
+    :return: id number of the earliest played match.
+    """
     cursor = connection.cursor()
     sql = "SELECT max(match_id) FROM match_details"
     cursor.execute(sql)
@@ -38,6 +51,11 @@ def get_latest_match_id(connection):
 
 
 def get_earliest_match_id(connection):
+    """
+    Find id number of the earliest played match in database.
+    :param connection: Database connection object.
+    :return: Id number of the earliest played match.
+    """
     cursor = connection.cursor()
     sql = "SELECT min(match_id) FROM match_details"
     cursor.execute(sql)
@@ -47,6 +65,11 @@ def get_earliest_match_id(connection):
 
 
 def get_match_columns(connection):
+    """
+    Get match column names of target database.
+    :param connection: Database connection object.
+    :return: A list() of match column names.
+    """
     sql = "select column_name from information_schema.columns where table_schema='dota' and table_name='match_details';"
     cursor = connection.cursor()
     cursor.execute(sql)

@@ -6,6 +6,12 @@ SLEEP_TIME = multiprocessing.cpu_count() * 30
 
 
 def get_match_details(api, match_id):
+    """
+    Get match info by match id.
+    :param api: An api object to call Dota 2 APIs.
+    :param match_id: Target match id number.
+    :return: Data pared by parse_raw_match().
+    """
     for tries in range(5):
         try:
             match = api.get_match_details(match_id)
@@ -26,6 +32,11 @@ def get_match_details(api, match_id):
 
 
 def get_latest_match(api):
+    """
+    Get the latest played match id number.
+    :param api: An api object to call Dota 2 APIs.
+    :return: The latest played match id number.
+    """
     for tries in range(5):
         try:
             matches = api.get_match_history()
@@ -46,10 +57,15 @@ def get_latest_match(api):
 
 
 def parse_raw_match(raw_match):
+    """
+    Verify and parse data obtained by API.
+    :param raw_match: Raw data obtain by API.
+    :return: A dict() object with match info.
+    """
     if 10 != raw_match['human_players'] or 10 != len(raw_match['players']):
         raise APIError('Match %d wrong number of players' % raw_match['match_id'])
     if 'radiant_win' not in raw_match.viewkeys():
-        raise APIError('Match %d has not finished yet.' % raw_match['match_id'])
+        raise APIError('Match %d is not a standard game or has not finished yet.' % raw_match['match_id'])
 
     parsed_match_details = dict()
     for key in raw_match:
